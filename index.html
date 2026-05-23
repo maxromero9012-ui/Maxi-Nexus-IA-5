@@ -228,7 +228,210 @@ textarea {
   #sidebar { position:absolute; height:100%; z-index:50; transform:translateX(-260px); }
   #sidebar.open { transform:translateX(0); }
   #btn-toggle { display:block; }
-< truncated lines 231-435 >
+  .chat-actions { opacity:1; pointer-events:all; }
+}
+</style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash" style="
+  position:fixed;inset:0;z-index:999;
+  background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.5s;
+">
+  <canvas id="splash-icon" width="120" height="120" style="border-radius:24px;margin-bottom:20px;box-shadow:0 0 40px #8B5CF688;"></canvas>
+  <div style="color:#fff;font-size:28px;font-weight:bold;letter-spacing:4px;">MAXI IA</div>
+  <div style="color:#8B5CF6;font-size:13px;margin-top:6px;letter-spacing:2px;">Tu asistente personal</div>
+  <div style="margin-top:30px;display:flex;gap:6px;">
+    <div style="width:8px;height:8px;border-radius:50%;background:#4A90D9;animation:pulse 1s infinite;"></div>
+    <div style="width:8px;height:8px;border-radius:50%;background:#8B5CF6;animation:pulse 1s 0.2s infinite;"></div>
+    <div style="width:8px;height:8px;border-radius:50%;background:#06B6D4;animation:pulse 1s 0.4s infinite;"></div>
+  </div>
+  <style>
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:0.5}}
+  </style>
+</div>
+
+<script>
+// Dibujar ícono en splash
+window.addEventListener('DOMContentLoaded', () => {
+  const c = document.getElementById('splash-icon');
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0,0,120,120);
+  g.addColorStop(0,'#4A90D9'); g.addColorStop(0.5,'#8B5CF6'); g.addColorStop(1,'#06B6D4');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.roundRect(0,0,120,120,22);
+  ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.font='bold 68px Segoe UI';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('M',60,65);
+  ctx.font='18px serif'; ctx.fillStyle='#ffffff99';
+  ctx.fillText('✦',95,28);
+  // Ocultar splash después de 1.8s
+  setTimeout(()=>{
+    const s=document.getElementById('splash');
+    if(s){ s.style.opacity='0'; setTimeout(()=>{ if(s.parentNode) s.parentNode.removeChild(s); },500); }
+  },1500);
+});
+</script>
+
+<div id="sidebar">
+  <button class="btn-nuevo" onclick="nuevoChat()">＋ Nuevo Chat</button>
+  <button id="btn-instalar" onclick="instalarApp()" style="
+    display:none;background:linear-gradient(135deg,#4A90D9,#8B5CF6);
+    color:#fff;border:none;padding:11px;border-radius:8px;
+    font-size:13px;cursor:pointer;font-weight:bold;letter-spacing:1px;
+  ">📲 Instalar App</button>
+  <div id="lista-chats"></div>
+  <button class="btn-borrar-todo" onclick="borrarTodo()">🗑 Borrar todo</button>
+</div>
+
+<div id="main">
+  <header>
+    <button id="btn-toggle" onclick="toggleSidebar()">☰</button>
+    <h1>✦ Maxi IA</h1>
+  </header>
+  <div id="chat-box"></div>
+</div>
+
+<div class="input-area">
+  <div class="input-box">
+    <textarea id="userInput" rows="1" placeholder="Escribe un mensaje..." onkeydown="teclaEnter(event)" oninput="autoResize(this)"></textarea>
+    <button class="btn-enviar" id="btn-enviar" onclick="enviar()">➤</button>
+  </div>
+</div>
+
+<!-- Modal renombrar -->
+<div id="modal-wrap">
+  <div id="modal">
+    <h3>Renombrar conversación</h3>
+    <input type="text" id="modal-input" placeholder="Nuevo nombre...">
+    <div class="modal-btns">
+      <button id="modal-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button id="modal-ok" onclick="confirmarRenombrar()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// PWA INSTALACIÓN
+// ══════════════════════════════════════════════
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('btn-instalar').style.display = 'block';
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('btn-instalar').style.display = 'none';
+  deferredPrompt = null;
+});
+function instalarApp() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+  } else {
+    alert('Para instalar:\n1. Toca los 3 puntos arriba en Chrome\n2. Toca "Agregar a pantalla de inicio"\n3. ¡Listo! Se instala como app sin barra de Chrome.');
+  }
+}
+
+// ══════════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════════
+let chatActual = null;
+let historial = {};   // { id: { nombre, mensajes:[] } }
+let renamingId = null;
+let enviando = false;
+
+const SALUDO = "¡Hola! Soy **Maxi**, tu asistente con acceso a internet 🌐\n\n¿En qué te puedo ayudar hoy? Puedo responder preguntas, escribir código, buscar información actualizada y mucho más.";
+
+// ══════════════════════════════════════════════
+// PERSISTENCIA
+// ══════════════════════════════════════════════
+function guardar() {
+  try { localStorage.setItem('maxi_v5', JSON.stringify(historial)); } catch(e){}
+}
+function cargar() {
+  try {
+    const d = localStorage.getItem('maxi_v5');
+    if (d) historial = JSON.parse(d);
+  } catch(e) { historial = {}; }
+}
+
+// ══════════════════════════════════════════════
+// CHATS
+// ══════════════════════════════════════════════
+function nuevoChat() {
+  const id = 'c' + Date.now();
+  historial[id] = { nombre: 'Nueva conversación', mensajes: [{ rol:'ai', texto: SALUDO }] };
+  guardar();
+  abrirChat(id);
+  renderSidebar();
+  cerrarSidebar();
+}
+
+function abrirChat(id) {
+  chatActual = id;
+  renderSidebar();
+  renderChat();
+}
+
+function renombrarChat(id) {
+  renamingId = id;
+  document.getElementById('modal-input').value = historial[id].nombre;
+  document.getElementById('modal-wrap').classList.add('show');
+  setTimeout(() => document.getElementById('modal-input').focus(), 100);
+}
+
+function confirmarRenombrar() {
+  const val = document.getElementById('modal-input').value.trim();
+  if (val && renamingId) {
+    historial[renamingId].nombre = val;
+    guardar(); renderSidebar();
+  }
+  cerrarModal();
+}
+
+function cerrarModal() {
+  document.getElementById('modal-wrap').classList.remove('show');
+  renamingId = null;
+}
+
+function borrarChat(id) {
+  delete historial[id];
+  guardar();
+  if (chatActual === id) {
+    const ids = Object.keys(historial);
+    if (ids.length > 0) abrirChat(ids[ids.length-1]);
+    else nuevoChat();
+  } else renderSidebar();
+}
+
+function borrarTodo() {
+  if (!confirm('¿Borrar todas las conversaciones?')) return;
+  historial = {};
+  guardar();
+  nuevoChat();
+}
+
+// ══════════════════════════════════════════════
+// RENDER SIDEBAR
+// ══════════════════════════════════════════════
+function renderSidebar() {
+  const lista = document.getElementById('lista-chats');
+  lista.innerHTML = '';
+  const ids = Object.keys(historial).reverse();
+  ids.forEach(id => {
+    const div = document.createElement('div');
+    div.className = 'item-chat' + (id === chatActual ? ' activo' : '');
+
+    const title = document.createElement('span');
+    title.className = 'chat-title';
     title.textContent = historial[id].nombre;
     title.onclick = () => { abrirChat(id); cerrarSidebar(); };
 
