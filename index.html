@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -226,7 +225,7 @@ window.addEventListener('DOMContentLoaded', () => {
   },1500);
 });
 
-// Service Worker Registro Simple
+// Service Worker Registro
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
@@ -249,7 +248,7 @@ function instalarApp() {
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
   } else {
-    alert('Para instalar:\n1. Toca los 3 puntos arriba en Chrome\n2. Toca "Agregar a pantalla de inicio"');
+    alert('Para instalar:\n1. Toca los opciones de tu navegador\n2. Elige "Instalar aplicación" o "Agregar a pantalla de inicio"');
   }
 }
 
@@ -403,7 +402,35 @@ function showTyping() {
   box.scrollTop = box.scrollHeight;
 }
 
-// LLAMADA OPTIMIZADA A LA API
+// SISTEMA MULTI-MODELO CON RESPALDO (FALLBACK) EN CASO DE ERRORES
+async function fetchIA(mensajes) {
+  // Lista de modelos gratis soportados por Pollinations en orden de prioridad
+  const modelos = ['openai', 'anthropic', 'mistral', 'qwen'];
+  
+  for (let model of modelos) {
+    try {
+      const r = await fetch('https://text.pollinations.ai/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: mensajes,
+          model: model, // Intenta con el modelo actual de la lista
+          private: true,
+          cache: false
+        })
+      });
+      
+      if (r.ok) {
+        const text = await r.text();
+        if (text && text.trim().length > 0) return text;
+      }
+    } catch (e) {
+      console.warn(`El modelo ${model} falló, intentando con el siguiente de respaldo...`);
+    }
+  }
+  throw new Error("Ningún motor de IA respondió.");
+}
+
 async function enviar() {
   if (enviando) return;
   const inp = document.getElementById('userInput');
@@ -415,7 +442,7 @@ async function enviar() {
   enviando = true;
   document.getElementById('btn-enviar').disabled = true;
 
-  // Auto-titular conversación
+  // Auto-titular la conversación si es el primer mensaje real del usuario
   if (historial[chatActual].mensajes.length === 1) {
     fetch(`https://text.pollinations.ai/${encodeURIComponent('Dame un título corto de máximo 3 palabras en español para esta consulta: "' + texto + '". Solo el título sin comillas.')}`)
       .then(r => r.text())
@@ -433,48 +460,36 @@ async function enviar() {
       });
   }
 
+  // 1. Agregar el mensaje del usuario al estado e interfaz de forma local
   addMsg('user', texto);
   showTyping();
 
-  // CONTEXTO INTEGRAL: Cargamos el sistema y TODO el historial completo
-  const msgs = [
+  // 2. Construir la estructura limpia que se enviará al backend (Preservando memoria)
+  const msgsEnviados = [
     { role: 'system', content: 'Eres Maxi, una IA experta en programación y desarrollo web. Responde de forma clara, directa y en español.' }
   ];
   
+  // Mapeamos correctamente todo el historial acumulado en local
   historial[chatActual].mensajes.forEach(m => {
-    msgs.push({
-      role: m.role === 'user' || m.rol === 'user' ? 'user' : 'assistant',
+    msgsEnviados.push({
+      role: (m.rol === 'user' || m.role === 'user') ? 'user' : 'assistant',
       content: m.texto
     });
   });
 
   try {
-    let respuesta = null;
-
-    // Petición estructurada limpia sin modelos inexistentes
-    const r = await fetch('https://text.pollinations.ai/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: msgs,
-        private: true,
-        cache: false
-      })
-    });
-
-    if (r.ok) {
-      respuesta = await r.text();
-    }
+    // Llamamos a la función inteligente con sistema de fallbacks automáticos
+    const respuesta = await fetchIA(msgsEnviados);
 
     const indicator = document.getElementById('typing-indicator');
     if (indicator) indicator.remove();
 
-    addMsg('ai', respuesta || 'No obtuve una respuesta clara de la API. Intenta de nuevo.');
+    addMsg('ai', respuesta);
 
   } catch (err) {
     const indicator = document.getElementById('typing-indicator');
     if (indicator) indicator.remove();
-    addMsg('ai', '⚠️ Error de conexión con el núcleo de la IA. Comprueba tu red.');
+    addMsg('ai', '⚠️ Error crítico: Los servidores de respaldo están saturados. Inténtalo de nuevo.');
   }
 
   enviando = false;
@@ -520,3 +535,4 @@ if (Object.keys(historial).length === 0) {
 </script>
 </body>
 </html>
+
