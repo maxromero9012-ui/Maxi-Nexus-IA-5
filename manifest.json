@@ -28,4 +28,3 @@ async function fetchIA(mensajes) {
   }
   throw new Error("Ningún motor pudo procesar la solicitud.");
 }
-
