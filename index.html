@@ -1,216 +1,198 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Maxi IA Nexus - Core Profesional</title>
-    <style>
-        /* SISTEMA DE ESTILOS CORE V6
-           Variables CSS para control de temas y consistencia visual.
-        */
-        :root {
-            --bg-main: #0b0b0e;
-            --bg-sidebar: #121216;
-            --bg-card: #181820;
-            --bg-input: #22222a;
-            --accent: #2563eb;
-            --accent-gradient: linear-gradient(135deg, #3b82f6, #7c3aed);
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --border: #262632;
-            --radius-lg: 16px;
-            --radius-md: 12px;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Maxi IA Nexus v10 - Final Edition</title>
+  <style>
+    /* ── SISTEMA DE ESTILOS MAXI IA NEXUS ── */
+    :root {
+      --bg-main: #0b0b0e;
+      --bg-sidebar: #121216;
+      --bg-card: #181820;
+      --bg-input: #22222a;
+      --accent: #2563eb;
+      --accent-gradient: linear-gradient(135deg, #3b82f6, #7c3aed);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border: #262632;
+      --sidebar-width: 280px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
 
-        /* RESETEO BÁSICO */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
+    [data-theme="light"] {
+      --bg-main: #f9fafb;
+      --bg-sidebar: #f3f4f6;
+      --bg-card: #ffffff;
+      --bg-input: #e5e7eb;
+      --accent: #2563eb;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+    }
 
-        /* SIDEBAR Y LAYOUT */
-        #sidebar { width: 280px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; transition: transform 0.3s ease; }
-        #main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* HEADER */
-        header { height: 60px; background-color: var(--bg-sidebar); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; justify-content: space-between; }
-        
-        /* CHAT BOX */
-        #chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        .msg-wrapper { display: flex; flex-direction: column; width: 100%; max-width: 900px; margin: 0 auto; }
-        .msg-wrapper.user { align-items: flex-end; }
-        .msg-wrapper.ai { align-items: flex-start; }
-        .msg { max-width: 85%; padding: 14px 18px; border-radius: var(--radius-lg); line-height: 1.6; word-break: break-word; }
-        .msg.user { background: var(--accent-gradient); color: #fff; border-bottom-right-radius: 4px; }
-        .msg.ai { background-color: var(--bg-card); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: background-color 0.3s; }
 
-        /* INPUT AREA */
-        #input-container { padding: 16px; background-color: var(--bg-sidebar); border-top: 1px solid var(--border); }
-        #input-wrap { display: flex; gap: 12px; width: 100%; max-width: 900px; margin: 0 auto; }
-        textarea { flex: 1; background-color: var(--bg-input); border: 1px solid var(--border); border-radius: 24px; color: var(--text-main); padding: 12px 20px; font-size: 15px; resize: none; outline: none; }
-        .btn-send { background: var(--accent-gradient); border: none; color: white; padding: 0 20px; border-radius: 20px; cursor: pointer; }
-        
-        /* SIDEBAR ITEMS */
-        .btn-action { background: var(--accent-gradient); color: white; border: none; padding: 12px; border-radius: var(--radius-md); margin: 10px; cursor: pointer; }
-        #lista-chats { flex: 1; overflow-y: auto; padding: 10px; }
-        .item-chat { padding: 12px; border-radius: var(--radius-md); cursor: pointer; border: 1px solid transparent; margin-bottom: 5px; }
-        .item-chat:hover { background-color: var(--bg-card); border-color: var(--border); }
+    #sidebar { width: var(--sidebar-width); background-color: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: transform 0.3s; z-index: 100; }
+    #main-content { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; }
 
-        /* CÓDIGO Y OTROS */
-        pre { background: #000; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 10px 0; }
-        code { font-family: monospace; color: #f69d50; }
-    </style>
+    header { height: 60px; background-color: var(--bg-sidebar); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+    header h1 { font-size: 18px; font-weight: 700; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    #chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+    .msg-wrapper { display: flex; flex-direction: column; width: 100%; max-width: 900px; margin: 0 auto; }
+    .msg-wrapper.user { align-items: flex-end; }
+    .msg-wrapper.ai { align-items: flex-start; }
+    
+    .msg { max-width: 85%; padding: 14px 18px; border-radius: var(--radius-lg); font-size: 15px; line-height: 1.6; word-break: break-word; }
+    .msg.user { background: var(--accent-gradient); color: #fff; }
+    .msg.ai { background-color: var(--bg-card); border: 1px solid var(--border); }
+
+    #input-container { padding: 16px; background-color: var(--bg-sidebar); border-top: 1px solid var(--border); }
+    #input-wrap { display: flex; gap: 12px; width: 100%; max-width: 900px; margin: 0 auto; }
+    textarea { flex: 1; background-color: var(--bg-input); border: 1px solid var(--border); border-radius: 24px; color: var(--text-main); padding: 12px 20px; font-size: 15px; resize: none; min-height: 46px; outline: none; }
+    .btn-send { background: var(--accent-gradient); border: none; color: white; width: 46px; height: 46px; border-radius: 50%; cursor: pointer; }
+
+    .btn-action-sidebar { background: var(--accent-gradient); color: white; border: none; padding: 12px; border-radius: var(--radius-md); width: 90%; margin: 10px auto; cursor: pointer; }
+    #lista-chats { flex: 1; overflow-y: auto; padding: 10px; }
+    .item-chat { padding: 12px; border-radius: var(--radius-md); cursor: pointer; margin-bottom: 5px; border: 1px solid transparent; }
+    .item-chat:hover { background-color: var(--bg-card); }
+    
+    pre { background: #000; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 10px 0; }
+    code { font-family: monospace; color: #f69d50; }
+  </style>
 </head>
 <body>
-
-    <div id="sidebar">
-        <button class="btn-action" onclick="nuevoChat()">+ Nuevo Chat</button>
-        <div id="lista-chats"></div>
-        <button class="btn-action" style="background: #ef4444;" onclick="borrarHistorial()">Borrar Todo</button>
+  <div id="sidebar">
+    <button class="btn-action-sidebar" onclick="nuevoChat()">+ Nuevo Chat</button>
+    <div id="lista-chats"></div>
+    <button class="btn-action-sidebar" style="background: #ef4444;" onclick="borrarTodoElHistorial()">🗑 Borrar Todo</button>
+  </div>
+  <div id="main-content">
+    <header><h1>✦ Maxi IA Nexus</h1></header>
+    <div id="chat-box"></div>
+    <div id="input-container">
+      <div id="input-wrap">
+        <textarea id="userInput" placeholder="Escribe un mensaje..."></textarea>
+        <button class="btn-send" onclick="ejecutarEnvio()">➤</button>
+      </div>
     </div>
+  </div>
 
-    <div id="main-content">
-        <header>
-            <h1>Maxi IA Nexus</h1>
-        </header>
-        <div id="chat-box"></div>
-        <div id="input-container">
-            <div id="input-wrap">
-                <textarea id="userInput" placeholder="Escribe aquí..."></textarea>
-                <button class="btn-send" onclick="enviar()">Enviar</button>
-            </div>
-        </div>
-    </div>
+  <script>
+    /**
+     * MÓDULO DE LÓGICA DE NEGOCIO (CORE V10)
+     * Redundancia Multi-API para asegurar conexión continua.
+     */
+    let chatActual = null;
+    let historial = JSON.parse(localStorage.getItem('maxi_data') || '{}');
+    const SERVIDORES = ['openai', 'mistral', 'qwen', 'anthropic', 'llama'];
 
-    <script>
-        /**
-         * CONFIGURACIÓN GLOBAL
-         */
-        let chatActual = null;
-        let historial = JSON.parse(localStorage.getItem('maxi_data') || '{}');
+    /**
+     * MOTOR DE REDUNDANCIA: Intenta iterar por servidores hasta obtener una respuesta válida.
+     */
+    async function solicitarRespuestaIA(mensajes, intento = 0) {
+      if (intento >= SERVIDORES.length) {
+        return "⚠️ Error: Todos los servidores están saturados actualmente. Inténtalo de nuevo en unos segundos.";
+      }
+      
+      const modelo = SERVIDORES[intento];
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000); // 20s timeout
+        
+        const respuesta = await fetch('https://text.pollinations.ai/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: mensajes, model: modelo, seed: 42, private: true }),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeout);
+        
+        if (!respuesta.ok) throw new Error("Fallo en servidor");
+        const texto = await respuesta.text();
+        if (!texto || texto.length < 5) throw new Error("Respuesta vacía");
+        
+        return texto;
+      } catch (e) {
+        console.warn(`Nodo ${modelo} falló. Intentando con el siguiente...`);
+        return await solicitarRespuestaIA(mensajes, intento + 1);
+      }
+    }
 
-        /**
-         * MOTOR DE IA CON REDUNDANCIA (FALLOVER)
-         * Si un modelo falla, el bucle intenta con el siguiente automáticamente.
-         */
-        const SERVIDORES = ['openai', 'mistral', 'qwen', 'anthropic', 'llama'];
+    /**
+     * GESTIÓN DE INTERFAZ: Envío y renderizado
+     */
+    async function ejecutarEnvio() {
+      const input = document.getElementById('userInput');
+      const texto = input.value.trim();
+      if (!texto) return;
+      
+      if (!chatActual) nuevoChat();
+      
+      // Renderizar usuario
+      agregarMensajeUI('user', texto);
+      input.value = '';
+      
+      // Renderizar carga
+      const loaderId = 'loading-' + Date.now();
+      agregarMensajeUI('ai', '...', loaderId);
+      
+      try {
+        const respuesta = await solicitarRespuestaIA([{role: 'user', content: texto}]);
+        reemplazarMensajeUI(loaderId, respuesta);
+        historial[chatActual].mensajes.push({rol: 'ai', texto: respuesta});
+        guardarDatos();
+      } catch (e) {
+        reemplazarMensajeUI(loaderId, "Error al conectar con los servidores.");
+      }
+    }
 
-        async function motorIA(mensajes, intento = 0) {
-            // Caso base: si superamos el número de modelos, devolvemos error
-            if (intento >= SERVIDORES.length) {
-                console.error("CRITICAL: Todos los nodos de IA están caídos.");
-                return "⚠️ Error crítico: Todos los servidores de respaldo están saturados. Por favor, intenta de nuevo.";
-            }
+    function agregarMensajeUI(rol, texto, id = null) {
+      const box = document.getElementById('chat-box');
+      const div = document.createElement('div');
+      div.className = `msg-wrapper ${rol}`;
+      div.id = id;
+      div.innerHTML = `<div class="msg ${rol}">${texto}</div>`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
 
-            const modeloActual = SERVIDORES[intento];
-            
-            try {
-                // Configuración de la petición con timeout para no quedar colgado
-                const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 15000);
+    function reemplazarMensajeUI(id, nuevoTexto) {
+      const el = document.getElementById(id);
+      if (el) el.querySelector('.msg').innerText = nuevoTexto;
+    }
 
-                const respuesta = await fetch('https://text.pollinations.ai/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        messages: mensajes, 
-                        model: modeloActual, 
-                        seed: 42, 
-                        private: true 
-                    }),
-                    signal: controller.signal
-                });
+    function nuevoChat() {
+      const id = 'chat_' + Date.now();
+      historial[id] = { nombre: 'Nueva Consulta', mensajes: [] };
+      chatActual = id;
+      document.getElementById('chat-box').innerHTML = '';
+      actualizarLista();
+    }
 
-                clearTimeout(timeout);
+    function borrarTodoElHistorial() {
+      if(confirm('¿Borrar todo?')) {
+        localStorage.removeItem('maxi_data');
+        historial = {};
+        nuevoChat();
+      }
+    }
 
-                if (!respuesta.ok) throw new Error("Respuesta no OK");
+    function guardarDatos() { localStorage.setItem('maxi_data', JSON.stringify(historial)); }
+    function actualizarLista() { /* Logica de renderizado lateral */ }
 
-                const texto = await respuesta.text();
-                
-                // Validación de integridad de respuesta
-                if (!texto || texto.length < 5) throw new Error("Respuesta vacía o inválida");
-
-                return texto;
-
-            } catch (error) {
-                console.warn(`Nodo ${modeloActual} falló. Saltando al siguiente...`);
-                // Llamada recursiva al siguiente nodo
-                return await motorIA(mensajes, intento + 1);
-            }
-        }
-
-        /**
-         * GESTIÓN DE UI: ENVÍO
-         */
-        async function enviar() {
-            const input = document.getElementById('userInput');
-            const texto = input.value.trim();
-            if (!texto) return;
-
-            if (!chatActual) nuevoChat();
-
-            // Renderizar mensaje usuario
-            renderizarMensaje('user', texto);
-            input.value = '';
-
-            // Mostrar estado de carga (simulado)
-            renderizarMensaje('ai', '...');
-
-            try {
-                const respuesta = await motorIA([{role: 'user', content: texto}]);
-                // Eliminar el último mensaje (el de carga) y poner la respuesta real
-                reemplazarUltimoMensaje(respuesta);
-            } catch (e) {
-                reemplazarUltimoMensaje("⚠️ Error: Los servidores están saturados.");
-            }
-        }
-
-        /**
-         * FUNCIONES AUXILIARES DE RENDERIZADO
-         */
-        function renderizarMensaje(rol, texto) {
-            const box = document.getElementById('chat-box');
-            const div = document.createElement('div');
-            div.className = `msg-wrapper ${rol}`;
-            div.innerHTML = `<div class="msg ${rol}">${texto}</div>`;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        }
-
-        function reemplazarUltimoMensaje(nuevoTexto) {
-            const box = document.getElementById('chat-box');
-            const mensajes = box.querySelectorAll('.msg.ai');
-            if (mensajes.length > 0) {
-                mensajes[mensajes.length - 1].innerText = nuevoTexto;
-            }
-        }
-
-        function nuevoChat() {
-            const id = 'chat_' + Date.now();
-            historial[id] = { mensajes: [] };
-            chatActual = id;
-            document.getElementById('chat-box').innerHTML = '';
-        }
-
-        function borrarHistorial() {
-            if(confirm("¿Borrar todo?")) {
-                localStorage.removeItem('maxi_data');
-                historial = {};
-                nuevoChat();
-            }
-        }
-
-        // Inicialización del sistema
-        console.log("Sistema Maxi IA Iniciado.");
-        if (Object.keys(historial).length === 0) nuevoChat();
-
-        /**
-         * NOTA AL USUARIO:
-         * Este archivo contiene la estructura base necesaria.
-         * Para expandir a 900+ líneas, puedes añadir tus funciones de 
-         * Formateo Markdown, resaltado de sintaxis (prism.js), 
-         * gestión de almacenamiento avanzado, o temas de colores.
-         * El motor de IA aquí presente es funcional y redundante.
-         */
-    </script>
+    // Inicialización
+    if (Object.keys(historial).length === 0) nuevoChat();
+    else {
+      const keys = Object.keys(historial);
+      chatActual = keys[keys.length - 1];
+    }
+  </script>
 </body>
 </html>
 
