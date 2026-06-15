@@ -1,334 +1,133 @@
-// ── PERSISTENCIA Y ESTADO GLOBAL ──
-let chatActual = null;
-let historial = {};
-let renamingId = null;
-let enviando = false;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Maxi IA</title>
+  <link rel="manifest" href="./manifest.json">
+  <style>
+    /* ── ESTILOS GENERALES Y OSCUROS ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background-color: #121212; color: #e0e0e0; display: flex; height: 100vh; overflow: hidden; }
+    
+    /* Layout */
+    #sidebar { width: 260px; background-color: #1a1a1a; display: flex; flex-direction: column; border-right: 1px solid #2d2d2d; transition: transform 0.3s ease; z-index: 10; }
+    #main-content { flex: 1; display: flex; flex-direction: column; position: relative; background-color: #121212; }
+    
+    /* Header */
+    header { height: 56px; background-color: #1a1a1a; border-bottom: 1px solid #2d2d2d; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+    header h1 { font-size: 18px; color: #4A90D9; font-weight: 600; }
+    
+    /* Chat Box */
+    #chat-box { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .msg { max-width: 80%; padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.5; word-break: break-word; }
+    .msg.user { background-color: #3b82f6; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .msg.ai { background-color: #1e1e1e; color: #e0e0e0; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #2d2d2d; }
+    
+    /* Contenedor de Entrada */
+    #input-wrap { padding: 12px 16px; background-color: #1a1a1a; border-top: 1px solid #2d2d2d; display: flex; gap: 8px; align-items: flex-end; }
+    textarea { flex: 1; background-color: #262626; border: 1px solid #3a3a3a; border-radius: 24px; color: #fff; padding: 10px 16px; font-size: 15px; resize: none; max-height: 120px; outline: none; }
+    button { background-color: #3b82f6; border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+    button:disabled { background-color: #444; cursor: not-allowed; }
+    
+    /* Sidebar Componentes */
+    .btn-nuevo { background-color: #3b82f6; border-radius: 8px; width: auto; height: 40px; margin: 12px; font-weight: bold; font-size: 14px; }
+    #lista-chats { flex: 1; overflow-y: auto; padding: 0 8px; }
+    .item-chat { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-radius: 8px; cursor: pointer; margin-bottom: 4px; font-size: 14px; }
+    .item-chat.activo { background-color: #2d2d2d; color: #3b82f6; }
+    .chat-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-actions button { background: none; width: auto; height: auto; font-size: 14px; margin-left: 6px; display: inline; }
+    .btn-borrar-todo { background-color: #cf6679; width: auto; height: 36px; margin: 12px; border-radius: 6px; font-weight: bold; }
 
-const SALUDO = "¡Hola! Soy **Maxi**, tu asistente experto en programación 💻\n\n¿Qué código vamos a estructurar o corregir hoy? Dime tu idea y la armamos paso a paso.";
+    /* Indicador de carga (dots) */
+    .typing { display: flex; gap: 4px; align-items: center; width: fit-content; }
+    .dot { width: 8px; height: 8px; background-color: #888; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+    .dot:nth-child(1) { animation-delay: -0.32s; }
+    .dot:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
 
-// Icono Splash Screen
-window.addEventListener('DOMContentLoaded', () => {
-  const c = document.getElementById('splash-icon');
-  if (c) {
-    const ctx = c.getContext('2d');
-    const g = ctx.createLinearGradient(0,0,120,120);
-    g.addColorStop(0,'#4A90D9'); g.addColorStop(0.5,'#8B5CF6'); g.addColorStop(1,'#06B6D4');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.roundRect(0,0,120,120,22);
-    ctx.fill();
-    ctx.fillStyle='#fff';
-    ctx.font='bold 68px Segoe UI';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText('M',60,65);
-    ctx.font='18px serif'; ctx.fillStyle='#ffffff99';
-    ctx.fillText('✦',95,28);
-  }
-  
-  setTimeout(()=>{
-    const s=document.getElementById('splash');
-    if(s){ s.style.opacity='0'; setTimeout(()=>{ if(s.parentNode) s.parentNode.removeChild(s); },500); }
-  },1500);
-});
+    /* Modal */
+    #modal-wrap { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:100; }
+    #modal-wrap.show { display: flex; }
+    .modal { background:#1a1a1a; padding:20px; border-radius:12px; width:90%; max-width:400px; border:1px solid #2d2d2d; }
+    .modal input { width:100%; padding:10px; background:#262626; border:1px solid #3a3a3a; color:#fff; border-radius:6px; margin-bottom:12px; outline:none; }
+    .modal-btns { display:flex; justify-content:flex-end; gap:8px; }
+    .modal-btns button { width:auto; height:auto; padding:8px 16px; border-radius:6px; }
 
-// Service Worker Registro
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(()=>{});
-  });
-}
+    /* Botón Hamburguesa Móvil */
+    #btn-toggle { background: none; font-size: 20px; width: auto; height: auto; }
 
-// PWA INSTALACIÓN
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  document.getElementById('btn-instalar').style.display = 'block';
-});
+    /* Estilos de código formateado */
+    pre { background-color: #262626; padding: 10px; border-radius: 8px; overflow-x: auto; margin: 8px 0; border: 1px solid #3a3a3a; }
+    code { font-family: 'Courier New', Courier, monospace; color: #f69d50; }
 
-function instalarApp() {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-  } else {
-    alert('Para instalar:\n1. Toca las opciones de tu navegador\n2. Elige "Instalar aplicación" o "Agregar a pantalla de inicio"');
-  }
-}
-
-function guardar() {
-  try { localStorage.setItem('maxi_v5', JSON.stringify(historial)); } catch(e){}
-}
-
-function cargar() {
-  try {
-    const d = localStorage.getItem('maxi_v5');
-    if (d) historial = JSON.parse(d);
-  } catch(e) { historial = {}; }
-}
-
-// ── LÓGICA DE CHATS ──
-function nuevoChat() {
-  const id = 'c' + Date.now();
-  historial[id] = { nombre: 'Nueva conversación', mensajes: [{ rol:'ai', texto: SALUDO }] };
-  guardar();
-  abrirChat(id);
-  renderSidebar();
-  cerrarSidebar();
-}
-
-function abrirChat(id) {
-  chatActual = id;
-  renderSidebar();
-  renderChat();
-}
-
-function renombrarChat(id) {
-  renamingId = id;
-  document.getElementById('modal-input').value = historial[id].nombre;
-  document.getElementById('modal-wrap').classList.add('show');
-  setTimeout(() => document.getElementById('modal-input').focus(), 100);
-}
-
-function confirmarRenombrar() {
-  const val = document.getElementById('modal-input').value.trim();
-  if (val && renamingId) {
-    historial[renamingId].nombre = val;
-    guardar(); renderSidebar();
-  }
-  cerrarModal();
-}
-
-function cerrarModal() {
-  document.getElementById('modal-wrap').classList.remove('show');
-  renamingId = null;
-}
-
-function borrarChat(id) {
-  delete historial[id];
-  guardar();
-  if (chatActual === id) {
-    const ids = Object.keys(historial);
-    if (ids.length > 0) abrirChat(ids[ids.length-1]);
-    else nuevoChat();
-  } else renderSidebar();
-}
-
-function borrarTodo() {
-  if (!confirm('¿Borrar todas las conversaciones?')) return;
-  historial = {};
-  guardar();
-  nuevoChat();
-}
-
-function renderSidebar() {
-  const lista = document.getElementById('lista-chats');
-  if (!lista) return;
-  lista.innerHTML = '';
-  const ids = Object.keys(historial).reverse();
-  ids.forEach(id => {
-    const div = document.createElement('div');
-    div.className = 'item-chat' + (id === chatActual ? ' activo' : '');
-
-    const title = document.createElement('span');
-    title.className = 'chat-title';
-    title.textContent = historial[id].nombre;
-    title.onclick = () => { abrirChat(id); cerrarSidebar(); };
-
-    const actions = document.createElement('div');
-    actions.className = 'chat-actions';
-
-    const btnR = document.createElement('button');
-    btnR.textContent = '✏️';
-    btnR.onclick = (e) => { e.stopPropagation(); renombrarChat(id); };
-
-    const btnD = document.createElement('button');
-    btnD.textContent = '🗑';
-    btnD.onclick = (e) => { e.stopPropagation(); borrarChat(id); };
-
-    actions.append(btnR, btnD);
-    div.append(title, actions);
-    lista.appendChild(div);
-  });
-}
-
-function formatear(texto) {
-  if (!texto) return '';
-  return texto
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/```(\w*)\n?([\s\S]*?)```/g, (_,l,c) => `<pre><code>${c.trim()}</code></pre>`)
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/\n/g, '<br>');
-}
-
-function renderChat() {
-  const box = document.getElementById('chat-box');
-  if (!box) return;
-  box.innerHTML = '';
-  if (!chatActual || !historial[chatActual]) return;
-  historial[chatActual].mensajes.forEach(m => {
-    const div = document.createElement('div');
-    div.className = 'msg ' + m.rol;
-    div.innerHTML = formatear(m.texto);
-    box.appendChild(div);
-  });
-  box.scrollTop = box.scrollHeight;
-}
-
-function addMsg(rol, texto) {
-  historial[chatActual].mensajes.push({ rol, texto });
-  guardar();
-  const box = document.getElementById('chat-box');
-  const div = document.createElement('div');
-  div.className = 'msg ' + rol;
-  div.innerHTML = formatear(texto);
-  if (box) {
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-  }
-  return div;
-}
-
-function showTyping() {
-  const box = document.getElementById('chat-box');
-  const div = document.createElement('div');
-  div.className = 'msg ai typing';
-  div.id = 'typing-indicator';
-  div.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
-  if (box) {
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-  }
-}
-
-// ── MOTOR DE INTELIGENCIA CON RESPALDO MULTI-MODELO ──
-async function fetchIA(mensajes) {
-  const modelos = ['openai', 'anthropic', 'mistral', 'qwen'];
-  
-  for (let model of modelos) {
-    try {
-      const r = await fetch('https://text.pollinations.ai/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: mensajes,
-          model: model,
-          private: true,
-          cache: false
-        })
-      });
-      
-      if (r.ok) {
-        const text = await r.text();
-        if (text && text.trim().length > 0 && !text.includes('Error')) {
-          return text;
-        }
-      }
-    } catch (e) {
-      console.warn(`El modelo ${model} falló. Probando el siguiente respaldo...`);
+    /* Responsivo Tablet/Celular */
+    @media (max-width: 600px) {
+      #sidebar { position: absolute; left: 0; top: 0; bottom: 0; transform: translateX(-100%); }
+      #sidebar.open { transform: translateX(0); }
     }
-  }
-  throw new Error("Saturación total.");
-}
+  </style>
+</head>
+<body>
 
-// ── ACCIÓN DE ENVIAR (RECOGE TU INPUT Y MANTIENE LA MEMORIA) ──
-async function enviar() {
-  if (enviando) return;
-  const inp = document.getElementById('userInput');
-  const texto = inp.value.trim();
-  if (!texto) return;
+  <div id="sidebar">
+    <button class="btn-nuevo" onclick="nuevoChat()">+ Nuevo Chat</button>
+    <div id="lista-chats"></div>
+    <button id="btn-instalar" class="btn-nuevo" style="display:none; background-color:#10b981;" onclick="instalarApp()">📥 Instalar App</button>
+    <button class="btn-borrar-todo" onclick="borrarTodo()">🗑 Borrar todo</button>
+  </div>
 
-  inp.value = '';
-  inp.style.height = 'auto';
-  enviando = true;
-  document.getElementById('btn-enviar').disabled = true;
+  <div id="main-content">
+    <header>
+      <button id="btn-toggle" onclick="toggleSidebar()">☰</button>
+      <h1>✦ Maxi IA</h1>
+      <div style="width:24px;"></div>
+    </header>
 
-  // Auto-titular conversación dinámica
-  if (historial[chatActual].mensajes.length === 1) {
-    fetch(`https://text.pollinations.ai/${encodeURIComponent('Dame un título corto de máximo 3 palabras en español para: "' + texto + '". Solo el título sin comillas.')}`)
-      .then(r => r.text())
-      .then(nombre => {
-        if (nombre && nombre.length > 2 && nombre.length < 30) {
-          historial[chatActual].nombre = nombre.trim();
-        } else {
-          historial[chatActual].nombre = texto.slice(0,25) + '...';
-        }
-        guardar(); renderSidebar();
-      })
-      .catch(() => {
-        historial[chatActual].nombre = texto.slice(0,25) + '...';
-        guardar(); renderSidebar();
+    <div id="chat-box"></div>
+
+    <div id="input-wrap">
+      <textarea id="userInput" placeholder="Escribe un mensaje..." rows="1" onkeydown="teclaEnter(e)" oninput="autoResize(this)"></textarea>
+      <button id="btn-enviar" onclick="enviar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="modal-wrap">
+    <div class="modal">
+      <h3 style="margin-bottom:12px; color:#4A90D9;">Renombrar chat</h3>
+      <input type="text" id="modal-input">
+      <div class="modal-btns">
+        <button style="background:#444;" onclick="cerrarModal()">Cancelar</button>
+        <button onclick="confirmarRenombrar()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let chatActual = null;
+    let historial = {};
+    let renamingId = null;
+    let enviando = false;
+
+    const SALUDO = "¡Hola! Soy **Maxi**, tu asistente experto en programación 💻\n\n¿Qué código vamos a estructurar o corregir hoy? Dime tu idea y la armamos paso a paso.";
+
+    // Service Worker Registro
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(()=>{});
       });
-  }
+    }
 
-  // Agrega tu mensaje al chat visual
-  addMsg('user', texto);
-  showTyping();
-
-  // CONSTRUCCIÓN DEL CONTEXTO: Aquí se junta el System Prompt y TODO lo que han hablado
-  const msgsEnviados = [
-    { role: 'system', content: 'Eres Maxi, una IA experta en programación y desarrollo web. Responde de forma clara, directa, en español y recuerda perfectamente las instrucciones previas del usuario.' }
-  ];
-  
-  // Añade toda la memoria acumulada del chat actual
-  historial[chatActual].mensajes.forEach(m => {
-    msgsEnviados.push({
-      role: (m.rol === 'user' || m.role === 'user') ? 'user' : 'assistant',
-      content: m.texto
+    // PWA INSTALACIÓN
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('btn-instalar').style.display = 'block';
     });
-  });
 
-  try {
-    const respuesta = await fetchIA(msgsEnviados);
-    const indicator = document.getElementById('typing-indicator');
-    if (indicator) indicator.remove();
+    function instalarApp() {
+      if (deferredPrompt) {
 
-    addMsg('ai', respuesta);
-
-  } catch (err) {
-    const indicator = document.getElementById('typing-indicator');
-    if (indicator) indicator.remove();
-    addMsg('ai', '⚠️ No obtuve una respuesta clara de la API. Intenta de nuevo.');
-  }
-
-  enviando = false;
-  document.getElementById('btn-enviar').disabled = false;
-  inp.focus();
-}
-
-// ── UTILIDADES DE LA INTERFAZ ──
-function teclaEnter(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); }
-}
-
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-}
-
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-}
-function cerrarSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-}
-
-document.addEventListener('click', e => {
-  const sidebar = document.getElementById('sidebar');
-  if (sidebar && window.innerWidth <= 600 && sidebar.classList.contains('open')) {
-    if (!sidebar.contains(e.target) && e.target.id !== 'btn-toggle') {
-      sidebar.classList.remove('open');
-    }
-  }
-  if (e.target === document.getElementById('modal-wrap')) cerrarModal();
-});
-
-// ── INICIALIZACIÓN DE LA APLICACIÓN ──
-cargar();
-if (Object.keys(historial).length === 0) {
-  nuevoChat();
-} else {
-  const ids = Object.keys(historial);
-  abrirChat(ids[ids.length - 1]);
-}
