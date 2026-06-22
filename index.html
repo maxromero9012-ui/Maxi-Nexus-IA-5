@@ -10,32 +10,25 @@
 <meta name="theme-color" content="#121212">
 <link rel="manifest" href="manifest.json">
 <title>Maxi IA</title>
+
 <style>
 * { box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI',sans-serif; }
-body { background:#121212; color:#ececec; height:100vh; overflow:hidden; }
+body { background:#121212; color:#ececec; display:flex; height:100vh; overflow:hidden; position: relative; }
 
-#app-wrapper { display:flex; height:100vh; overflow:hidden; }
-
+/* ── SIDEBAR ── */
 #sidebar {
-  width:0; overflow:hidden; flex-shrink:0; background:#1a1a1a;
-  border-right:1px solid #2a2a2a; transition: width 0.3s ease;
-  display:flex; flex-direction:column; padding:0;
+  width:260px; background:#1a1a1a; border-right:1px solid #2a2a2a;
+  display:flex; flex-direction:column; padding:14px; gap:10px;
+  flex-shrink: 0; transition: transform 0.25s ease;
 }
-#sidebar.open { width:280px; padding:14px; }
-#sidebar > * { opacity:0; transition: opacity 0.2s ease 0.1s; }
-#sidebar.open > * { opacity:1; }
 
-#sidebar .btn-nuevo {
+.btn-nuevo {
   background:#4dadf7; color:#000; border:none; padding:12px;
   border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer;
-  margin-bottom:6px;
 }
-#sidebar .btn-nuevo:active { background:#2e8fd4; }
+.btn-nuevo:active { background:#2e8fd4; }
 
-#lista-chats {
-  flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px;
-  margin:6px 0;
-}
+#lista-chats { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px; }
 
 .item-chat {
   padding:11px 12px; background:#252525; border-radius:8px; cursor:pointer;
@@ -55,44 +48,28 @@ body { background:#121212; color:#ececec; height:100vh; overflow:hidden; }
 }
 .chat-actions button:hover { background:#444; color:#fff; }
 
-#sidebar .btn-borrar-todo {
+.btn-borrar-todo {
   background:#1e1e1e; color:#ff6666; border:1px solid #333;
   padding:11px; border-radius:8px; font-size:13px; cursor:pointer;
-  margin-top:4px;
 }
-#sidebar .btn-borrar-todo:active { background:#2a0000; }
+.btn-borrar-todo:active { background:#2a0000; }
 
-#main {
-  flex:1; display:flex; flex-direction:column; min-width:0; overflow:hidden;
-}
+/* ── MAIN ── */
+#main { flex:1; display:flex; flex-direction:column; min-width:0; overflow:hidden; }
 
 header {
   background:#1a1a1a; padding:14px 16px; border-bottom:1px solid #2a2a2a;
-  display:flex; align-items:center; gap:12px; flex-shrink:0;
+  display:flex; align-items:center; gap:10px; flex-shrink:0;
 }
 #btn-toggle {
-  background:none; border:none; color:#aaa; font-size:24px; cursor:pointer;
-  padding:0 4px;
+  background:none; border:none; color:#aaa; font-size:20px; cursor:pointer; display:none;
 }
-#btn-toggle:hover { color:#fff; }
-header h1 { font-size:17px; color:#4dadf7; flex:1; text-align:center; }
-
-/* Botones de cabecera */
-.header-btn {
-  background:none; border:none; font-size:20px; cursor:pointer;
-  padding:0 6px; transition: transform 0.2s;
-}
-.header-btn:hover { transform:scale(1.1); }
-.header-btn:active { transform:scale(0.9); }
-#btn-borrar-actual { color:#ff6666; }
-#btn-borrar-actual:hover { color:#ff4444; }
-#btn-borrar-todo-header { color:#ff6666; }
-#btn-borrar-todo-header:hover { color:#ff4444; }
+header h1 { font-size:17px; color:#4dadf7; flex:1; text-align:center; margin-right: 30px; }
 
 #chat-box {
   flex:1; padding:20px; overflow-y:auto;
   display:flex; flex-direction:column; gap:16px;
-  min-height:0; padding-bottom:80px;
+  min-height:0; padding-bottom:100px;
 }
 
 .msg { max-width:80%; padding:13px 16px; border-radius:14px; line-height:1.65; font-size:14.5px; word-break:break-word; }
@@ -102,7 +79,6 @@ header h1 { font-size:17px; color:#4dadf7; flex:1; text-align:center; }
 .msg.ai code { font-family:'Consolas',monospace; font-size:13px; color:#a9b7c6; }
 .msg.ai p { margin-bottom:6px; }
 .msg.ai strong { color:#4dadf7; }
-.msg.ai img { max-width:100%; border-radius:8px; margin:8px 0; }
 
 .typing { display:flex; gap:5px; padding:14px 18px; align-self: flex-start; }
 .dot { width:8px; height:8px; background:#4dadf7; border-radius:50%; animation:bounce 1s infinite; }
@@ -110,17 +86,16 @@ header h1 { font-size:17px; color:#4dadf7; flex:1; text-align:center; }
 .dot:nth-child(3) { animation-delay:0.4s; }
 @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-8px)} }
 
+/* ── INPUT ── */
 .input-area {
-  position:fixed; bottom:0; left:0; right:0;
-  padding:10px 14px 14px 14px;
-  background:#1a1a1a;
-  border-top:1px solid #2a2a2a;
+  position:fixed; bottom:0; left:260px; right:0;
+  padding:14px; background:#1a1a1a; border-top:1px solid #2a2a2a;
   z-index:40;
 }
 .input-box {
   display:flex; gap:8px; background:#2a2a2a;
-  padding:6px 14px; border-radius:30px; align-items:center;
-  border:1px solid #444; max-width:800px; margin:0 auto;
+  padding:8px 14px; border-radius:30px; align-items:center;
+  border:1px solid #444; max-width: 800px; margin: 0 auto;
 }
 textarea {
   flex:1; background:transparent; border:none; color:#fff;
@@ -135,19 +110,10 @@ textarea {
 .btn-enviar:active { background:#2e8fd4; transform:scale(0.95); }
 .btn-enviar:disabled { background:#333; color:#666; cursor:not-allowed; }
 
-/* Botón imagen */
-.btn-imagen {
-  background:linear-gradient(135deg,#8B5CF6,#4A90D9);
-  border:none; min-width:42px; height:42px;
-  border-radius:50%; cursor:pointer; color:#fff; font-size:18px;
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
-}
-.btn-imagen:active { transform:scale(0.95); }
-.btn-imagen:hover { filter:brightness(1.1); }
-
+/* ── MODAL RENOMBRAR ── */
 #modal-wrap {
   position:fixed; inset:0; background:#000000bb;
-  display:none; align-items:center; justify-content:center; z-index:1100;
+  display:none; align-items:center; justify-content:center; z-index:100;
 }
 #modal-wrap.show { display:flex; }
 #modal {
@@ -166,14 +132,25 @@ textarea {
 #modal-cancel { background:#333; color:#aaa; }
 #modal-ok { background:#4dadf7; color:#000; font-weight:bold; }
 
-@media (max-width:600px) {
-  #sidebar.open { width:85%; max-width:300px; }
+/* ── RESPONSIVE MÓVIL ── */
+@media (max-width: 600px) {
+  #sidebar { position:absolute; height:100%; z-index:50; transform:translateX(-260px); }
+  #sidebar.open { transform:translateX(0); }
+  #btn-toggle { display:block; }
+  .chat-actions { opacity:1; pointer-events:all; }
+  .input-area { left:0; }
+  header h1 { margin-right: 0; }
 }
 </style>
 </head>
 <body>
 
-<div id="splash" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s;">
+<div id="splash" style="
+  position:fixed;inset:0;z-index:999;
+  background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.5s;
+">
   <canvas id="splash-icon" width="120" height="120" style="border-radius:24px;margin-bottom:20px;box-shadow:0 0 40px #8B5CF688;"></canvas>
   <div style="color:#fff;font-size:28px;font-weight:bold;letter-spacing:4px;">MAXI IA</div>
   <div style="color:#8B5CF6;font-size:13px;margin-top:6px;letter-spacing:2px;">Tu asistente personal</div>
@@ -182,32 +159,33 @@ textarea {
     <div style="width:8px;height:8px;border-radius:50%;background:#8B5CF6;animation:pulse 1s 0.2s infinite;"></div>
     <div style="width:8px;height:8px;border-radius:50%;background:#06B6D4;animation:pulse 1s 0.4s infinite;"></div>
   </div>
-  <style>@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:0.5}}</style>
+  <style>
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:0.5}}
+  </style>
 </div>
 
-<div id="app-wrapper">
-  <div id="sidebar">
-    <button class="btn-nuevo" onclick="nuevoChat(); cerrarSidebar();">＋ Nuevo Chat</button>
-    <button id="btn-instalar" onclick="instalarApp()" style="display:none;background:linear-gradient(135deg,#4A90D9,#8B5CF6);color:#fff;border:none;padding:11px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:bold;letter-spacing:1px;">📲 Instalar App</button>
-    <div id="lista-chats"></div>
-    <button class="btn-borrar-todo" onclick="borrarTodo()">🗑 Borrar todo</button>
-  </div>
+<div id="sidebar">
+  <button class="btn-nuevo" onclick="nuevoChat()">＋ Nuevo Chat</button>
+  <button id="btn-instalar" onclick="instalarApp()" style="
+    display:none;background:linear-gradient(135deg,#4A90D9,#8B5CF6);
+    color:#fff;border:none;padding:11px;border-radius:8px;
+    font-size:13px;cursor:pointer;font-weight:bold;letter-spacing:1px;
+  ">📲 Instalar App</button>
+  <div id="lista-chats"></div>
+  <button class="btn-borrar-todo" onclick="borrarTodo()">🗑 Borrar todo</button>
+</div>
 
-  <div id="main" onclick="cerrarSidebar()">
-    <header>
-      <button id="btn-toggle" onclick="event.stopPropagation(); toggleSidebar();">☰</button>
-      <h1>✦ Maxi IA</h1>
-      <button class="header-btn" id="btn-borrar-todo-header" onclick="borrarTodo()" title="Borrar todas las conversaciones">🗑❌</button>
-      <button class="header-btn" id="btn-borrar-actual" onclick="borrarChat(chatActual)" title="Borrar esta conversación">🗑</button>
-    </header>
-    <div id="chat-box"></div>
-  </div>
+<div id="main">
+  <header>
+    <button id="btn-toggle" onclick="toggleSidebar()">☰</button>
+    <h1>✦ Maxi IA</h1>
+  </header>
+  <div id="chat-box"></div>
 </div>
 
 <div class="input-area">
   <div class="input-box">
-    <textarea id="userInput" rows="1" placeholder="Escribe un mensaje, o pide una imagen (ej: 'quiero una foto de...')" onkeydown="teclaEnter(event)" oninput="autoResize(this)"></textarea>
-    <button class="btn-imagen" onclick="activarModoImagen()" title="Generar imagen (escribe tu descripción)">🎨</button>
+    <textarea id="userInput" rows="1" placeholder="Escribe un mensaje..." onkeydown="teclaEnter(event)" oninput="autoResize(this)"></textarea>
     <button class="btn-enviar" id="btn-enviar" onclick="enviar()">➤</button>
   </div>
 </div>
@@ -224,7 +202,7 @@ textarea {
 </div>
 
 <script>
-// === SPLASH ===
+// Icono Splash Screen
 window.addEventListener('DOMContentLoaded', () => {
   const c = document.getElementById('splash-icon');
   const ctx = c.getContext('2d');
@@ -240,20 +218,21 @@ window.addEventListener('DOMContentLoaded', () => {
   ctx.fillText('M',60,65);
   ctx.font='18px serif'; ctx.fillStyle='#ffffff99';
   ctx.fillText('✦',95,28);
+  
   setTimeout(()=>{
     const s=document.getElementById('splash');
     if(s){ s.style.opacity='0'; setTimeout(()=>{ if(s.parentNode) s.parentNode.removeChild(s); },500); }
   },1500);
 });
 
-// === SERVICE WORKER ===
+// Service Worker Registro Simple
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
   });
 }
 
-// === PWA INSTALACIÓN ===
+// PWA INSTALACIÓN
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
@@ -273,15 +252,15 @@ function instalarApp() {
   }
 }
 
-// === ESTADO ===
+// ESTADO
 let chatActual = null;
 let historial = {};
 let renamingId = null;
 let enviando = false;
-let modoImagen = false; // para el botón 🎨
-const SALUDO = "¡Hola! Soy **Maxi**, tu asistente experto en programación 💻\n\nPuedes pedirme imágenes escribiendo *'quiero una imagen de...'* o usando el botón 🎨.";
 
-// === PERSISTENCIA ===
+const SALUDO = "¡Hola! Soy **Maxi**, tu asistente experto en programación 💻\n\n¿Qué código vamos a estructurar o corregir hoy? Dime tu idea y la armamos paso a paso.";
+
+// PERSISTENCIA
 function guardar() {
   try { localStorage.setItem('maxi_v5', JSON.stringify(historial)); } catch(e){}
 }
@@ -292,31 +271,7 @@ function cargar() {
   } catch(e) { historial = {}; }
 }
 
-// === DETECTAR SI QUIERE GENERAR IMAGEN ===
-function detectarGeneracionImagen(texto) {
-  const palabrasClave = ['imagen', 'foto', 'dibujo', 'ilustración', 'imagen de', 'foto de', 'genera', 'crea', 'dibuja', 'pintar'];
-  const textoLower = texto.toLowerCase();
-  for (let palabra of palabrasClave) {
-    if (textoLower.includes(palabra)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// === GENERAR IMAGEN CON POLLINATIONS ===
-async function generarImagen(prompt) {
-  try {
-    const promptLimpio = prompt.replace(/imagen|foto|dibujo|ilustración|genera|crea|dibuja|pintar/gi, '').trim();
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptLimpio || prompt)}`;
-    return url;
-  } catch (error) {
-    console.error('Error generando imagen:', error);
-    return null;
-  }
-}
-
-// === CHATS ===
+// CHATS LÓGICA
 function nuevoChat() {
   const id = 'c' + Date.now();
   historial[id] = { nombre: 'Nueva conversación', mensajes: [{ rol:'ai', texto: SALUDO }] };
@@ -333,7 +288,6 @@ function abrirChat(id) {
 }
 
 function renombrarChat(id) {
-  if (!id || !historial[id]) return;
   renamingId = id;
   document.getElementById('modal-input').value = historial[id].nombre;
   document.getElementById('modal-wrap').classList.add('show');
@@ -355,8 +309,6 @@ function cerrarModal() {
 }
 
 function borrarChat(id) {
-  if (!id || !historial[id]) return;
-  if (!confirm(`¿Eliminar la conversación "${historial[id].nombre}"?`)) return;
   delete historial[id];
   guardar();
   if (chatActual === id) {
@@ -380,18 +332,23 @@ function renderSidebar() {
   ids.forEach(id => {
     const div = document.createElement('div');
     div.className = 'item-chat' + (id === chatActual ? ' activo' : '');
+
     const title = document.createElement('span');
     title.className = 'chat-title';
     title.textContent = historial[id].nombre;
-    title.onclick = (e) => { e.stopPropagation(); abrirChat(id); cerrarSidebar(); };
+    title.onclick = () => { abrirChat(id); cerrarSidebar(); };
+
     const actions = document.createElement('div');
     actions.className = 'chat-actions';
+
     const btnR = document.createElement('button');
     btnR.textContent = '✏️';
     btnR.onclick = (e) => { e.stopPropagation(); renombrarChat(id); };
+
     const btnD = document.createElement('button');
     btnD.textContent = '🗑';
     btnD.onclick = (e) => { e.stopPropagation(); borrarChat(id); };
+
     actions.append(btnR, btnD);
     div.append(title, actions);
     lista.appendChild(div);
@@ -435,19 +392,6 @@ function addMsg(rol, texto) {
   return div;
 }
 
-function addImageMsg(rol, imageUrl, prompt) {
-  const texto = `<img src="${imageUrl}" alt="${prompt}" loading="lazy"><br><em>🖼️ Imagen generada: ${prompt}</em>`;
-  historial[chatActual].mensajes.push({ rol, texto });
-  guardar();
-  const box = document.getElementById('chat-box');
-  const div = document.createElement('div');
-  div.className = 'msg ' + rol;
-  div.innerHTML = texto;
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
-  return div;
-}
-
 function showTyping() {
   const box = document.getElementById('chat-box');
   const div = document.createElement('div');
@@ -458,33 +402,19 @@ function showTyping() {
   box.scrollTop = box.scrollHeight;
 }
 
-// === ACTIVAR MODO IMAGEN (botón 🎨) ===
-function activarModoImagen() {
-  const input = document.getElementById('userInput');
-  input.focus();
-  input.value = '🎨 Genera una imagen de ';
-  // Posicionar cursor al final
-  input.setSelectionRange(input.value.length, input.value.length);
-  modoImagen = true;
-}
-
-// === ENVIAR ===
+// LLAMADA OPTIMIZADA A LA API
 async function enviar() {
   if (enviando) return;
   const inp = document.getElementById('userInput');
-  let texto = inp.value.trim();
+  const texto = inp.value.trim();
   if (!texto) return;
-
-  // Si se activó el modo imagen con el botón, forzamos generación de imagen
-  let esImagen = modoImagen || detectarGeneracionImagen(texto);
-  modoImagen = false; // reset
 
   inp.value = '';
   inp.style.height = 'auto';
   enviando = true;
   document.getElementById('btn-enviar').disabled = true;
 
-  // Auto-título
+  // Auto-titular conversación
   if (historial[chatActual].mensajes.length === 1) {
     fetch(`https://text.pollinations.ai/${encodeURIComponent('Dame un título corto de máximo 3 palabras en español para esta consulta: "' + texto + '". Solo el título sin comillas.')}`)
       .then(r => r.text())
@@ -503,39 +433,24 @@ async function enviar() {
   }
 
   addMsg('user', texto);
-
-  // === GENERAR IMAGEN SI CORRESPONDE ===
-  if (esImagen) {
-    showTyping();
-    const imageUrl = await generarImagen(texto);
-    const indicator = document.getElementById('typing-indicator');
-    if (indicator) indicator.remove();
-    
-    if (imageUrl) {
-      addImageMsg('ai', imageUrl, texto);
-    } else {
-      addMsg('ai', '❌ No pude generar la imagen. Intenta con otra descripción.');
-    }
-    
-    enviando = false;
-    document.getElementById('btn-enviar').disabled = false;
-    inp.focus();
-    return;
-  }
-
-  // === SI NO ES IMAGEN, RESPONDE CON TEXTO ===
   showTyping();
+
+  // CONTEXTO INTEGRAL: Cargamos el sistema y TODO el historial completo
   const msgs = [
     { role: 'system', content: 'Eres Maxi, una IA experta en programación y desarrollo web. Responde de forma clara, directa y en español.' }
   ];
+  
   historial[chatActual].mensajes.forEach(m => {
     msgs.push({
-      role: (m.rol === 'user') ? 'user' : 'assistant',
+      role: m.role === 'user' || m.rol === 'user' ? 'user' : 'assistant',
       content: m.texto
     });
   });
 
   try {
+    let respuesta = null;
+
+    // Petición estructurada limpia sin modelos inexistentes
     const r = await fetch('https://text.pollinations.ai/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -546,8 +461,9 @@ async function enviar() {
       })
     });
 
-    let respuesta = null;
-    if (r.ok) respuesta = await r.text();
+    if (r.ok) {
+      respuesta = await r.text();
+    }
 
     const indicator = document.getElementById('typing-indicator');
     if (indicator) indicator.remove();
@@ -565,7 +481,7 @@ async function enviar() {
   inp.focus();
 }
 
-// === UI ===
+// UTILIDADES UI
 function teclaEnter(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); }
 }
@@ -578,16 +494,21 @@ function autoResize(el) {
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
 }
-
 function cerrarSidebar() {
   document.getElementById('sidebar').classList.remove('open');
 }
 
-document.getElementById('modal-wrap').addEventListener('click', function(e) {
-  if (e.target === this) cerrarModal();
+document.addEventListener('click', e => {
+  const sidebar = document.getElementById('sidebar');
+  if (window.innerWidth <= 600 && sidebar.classList.contains('open')) {
+    if (!sidebar.contains(e.target) && e.target.id !== 'btn-toggle') {
+      sidebar.classList.remove('open');
+    }
+  }
+  if (e.target === document.getElementById('modal-wrap')) cerrarModal();
 });
 
-// === INICIO ===
+// INICIO
 cargar();
 if (Object.keys(historial).length === 0) {
   nuevoChat();
